@@ -23,17 +23,14 @@ describe("Tests validation create statement by controller", () => {
 
         usersRepository = new UsersRepository();
         createUserCase = new CreateUserUseCase(usersRepository);
-        userAux = await createUserCase.execute({ name: "user name test", email: "usercreate@test.com", password: "xpto123" });
-
         authenticateUserUseCase = new AuthenticateUserUseCase(usersRepository);
     });
 
-    afterAll(async () => {
-        await connection.query("delete from users");
-    });
-
     beforeEach(async () => {
+        await connection.query("delete from users");
         await connection.query("delete from statements");
+
+        userAux = await createUserCase.execute({ name: "user name test", email: "usercreate@test.com", password: "xpto123" });
     });
 
     it("should be able create a new deposit statement by controller", async () => {
@@ -85,6 +82,7 @@ describe("Tests validation create statement by controller", () => {
         expect(response.body.description).toEqual("test withdraw");
         expect(response.body.amount).toEqual(100.23);
         expect(response.body.type).toEqual("withdraw");
+
     });
 
     it("should not be able create a new withdraw statement with insufficient funds by controller", async () => {
@@ -97,6 +95,44 @@ describe("Tests validation create statement by controller", () => {
 
         expect(response.status).toBe(400);
         expect(response.text).toEqual('{"message":"Insufficient funds"}');
+    });
+
+    it("should not be able create a new transfer statement with insufficient funds by controller", async () => {
+
+        const userTransfer = await createUserCase.execute({ name: "user transfer test", email: "usertransfer@test.com", password: "xpto123" });
+
+        const { user, token } = await authenticateUserUseCase.execute({ email: userAux.email, password: "xpto123" });
+
+        const response = await request(app).post(`/api/v1/statements/transfer/${userTransfer.id}`)
+            .set("Authorization", `Bearer ${token}`)
+            .send({ "amount": 100.23, "description": "test transfer" });
+
+        expect(response.status).toBe(400);
+        expect(response.text).toEqual('{"message":"Insufficient funds"}');
+    });
+
+    it("should be able create a new transfer statement by controller", async () => {
+
+        const userTransfer = await createUserCase.execute({ name: "user transfer testx", email: "usertransferx@test.com", password: "xpto123" });
+
+        const { user, token } = await authenticateUserUseCase.execute({ email: userAux.email, password: "xpto123" });
+
+        const responseDeposit = await request(app).post("/api/v1/statements/deposit")
+            .set("Authorization", `Bearer ${token}`)
+            .send({ "amount": 100.24, "description": "test deposit" });
+
+
+        expect(responseDeposit.status).toBe(201);
+        expect(responseDeposit.body.type).toEqual("deposit");
+
+        const response = await request(app).post(`/api/v1/statements/transfer/${userTransfer.id}`)
+            .set("Authorization", `Bearer ${token}`)
+            .send({ "amount": 100.23, "description": "test transfer" });
+
+        expect(response.status).toBe(201);
+        expect(response.body.description).toEqual("test transfer");
+        expect(response.body.amount).toEqual(100.23);
+        expect(response.body.type).toEqual("transfer");
     });
 
 });

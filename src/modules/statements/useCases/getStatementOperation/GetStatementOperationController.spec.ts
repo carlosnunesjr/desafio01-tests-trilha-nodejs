@@ -47,7 +47,7 @@ describe("Tests validation get balance by controller", () => {
 
         const { user, token } = await authenticateUserUseCase.execute({ email: userAux.email, password: "xpto123" });
 
-        const statement = await createStatementUseCase.execute({ "user_id": user.id!, "type": OperationType.DEPOSIT, "amount": 99.99, "description": "statement test" });
+        const statement = await createStatementUseCase.execute({ "user_id": user.id!, "type": OperationType.DEPOSIT, "amount": 99.99, "description": "statement test", "sender_id": null });
 
         const response = await request(app).get(`/api/v1/statements/${statement.id}`)
             .set("Authorization", `Bearer ${token}`)

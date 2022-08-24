@@ -5,7 +5,7 @@
   "type": "postgres",
   "host": "database",
   "port": 5432,
-  "database": "fin_api",
+  "database": "fin_api_test",
   "entities": [
     "./src/modules/**/entities/*.ts"
   ],

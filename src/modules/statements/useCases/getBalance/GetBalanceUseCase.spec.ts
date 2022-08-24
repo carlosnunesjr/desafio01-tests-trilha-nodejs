@@ -31,7 +31,7 @@ describe("Tests validation get balance case", () => {
 
     it("should be able to get balance by user id", async () => {
 
-        await createStatementUseCase.execute({ "user_id": user.id!, "type": OperationType.DEPOSIT, "amount": 99.99, "description": "statement test" });
+        await createStatementUseCase.execute({ "user_id": user.id!, "type": OperationType.DEPOSIT, "amount": 99.99, "description": "statement test", "sender_id": null });
         const balance = await getBalanceUseCase.execute({ "user_id": user.id! });
         expect(balance).toHaveProperty("balance");
         expect(balance.statement).toHaveLength(1);
